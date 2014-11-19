@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 #define BUFFER_SIZE 1024
 
@@ -98,6 +99,9 @@ void *  handleConnection(void * arg) {
 			buffer[n] = '\n';
 			handleClientInput(buffer);	
 		}
+		else if (n == 0) {
+			break;
+		}
 	
 	}
 
@@ -105,13 +109,12 @@ void *  handleConnection(void * arg) {
 }
 
 void handleClientInput(char * buffer) {
-	char * fileContents;
 	char * fileMeta[3];
 	char * pch;
 
 	printf("pre-strtok buffer = %s\n", buffer);
 
-	pch = strtok(buffer, "\\n");
+	pch = strtok(buffer, "\\\n");
 	pch = strtok(NULL, "\n");
 
 	printf("buffer = %s\n", buffer);
@@ -121,7 +124,10 @@ void handleClientInput(char * buffer) {
 	pch2 = strtok(buffer, " ");
 	int i = 0;
 	while (pch2 != NULL && i < 3) {
-		strcpy(fileMeta[i], pch2);
+		printf("pch2 = %s\n", pch2);
+		//printf("fileMeta[i] = %s\n", fileMeta[i]);
+		//strcpy(fileMeta[i], pch2);
+		fileMeta[i] = pch2;
 		printf("fileMeta[%d] = %s\n", i, fileMeta[i]);
 		printf("pch2 = %s\n", pch2 );
 		pch2 = strtok(NULL, " ");
@@ -131,12 +137,35 @@ void handleClientInput(char * buffer) {
 	for (i = 0; i < 3; i++) {
 		printf("%s\n", fileMeta[i]);
 	}
+	char fileContents[atoi(fileMeta[2])];
+	memcpy(fileContents, pch, atoi(fileMeta[2]));
+	printf("%s\n", fileContents);
 
-	//memcpy(fileContents, buffer);
-	char request[strlen(buffer)];
-	strcpy(request, buffer);
+	printf("checking for function\n");
 
-	if (strncmp("ADD ", request, 3) == 0) {
-		
+	if (strncmp("ADD", fileMeta[0], 3) == 0) {
+		pthread_mutex_lock(&mutex);
+		printf("locked mutex\n");
+		struct stat buf;
+		char filename[1024];
+		sprintf(filename, ".storage/%s", fileMeta[1]);
+
+		printf("%s\n", filename);
+  		if (stat(filename, &buf) != 0) {
+  			int fd = open(filename, O_CREAT | O_WRONLY);
+  			int n = write(fd, fileContents, atoi(fileMeta[2]));
+  		}
+  		pthread_mutex_unlock(&mutex);
+  	}
+
+
+
+	else if (strncmp("APPEND", fileMeta[0], 6) == 0) {
+
 	}
+	else if (strncmp("READ", fileMeta[0], 4) == 0) {
+
+	}
+		
+	
 }
