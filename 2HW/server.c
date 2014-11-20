@@ -254,6 +254,7 @@ void handleClientInput(char * buffer, int sock) {
   			printf("[thread %ld] Sent: ERROR NO SUCH FILE\n", (long)pthread_self());
   			write(sock, "ERROR NO SUCH FILE\n", strlen("ERROR NO SUCH FILE\n"));;
   		}
+  		num_readers--;
 
 		
 
@@ -309,6 +310,7 @@ void handleClientInput(char * buffer, int sock) {
 			sprintf(response, "%d\n%s\n", i, listFiles);
 			write(sock, response, strlen(response));
 		}
+		num_readers--;
 
 	}
 	else {
